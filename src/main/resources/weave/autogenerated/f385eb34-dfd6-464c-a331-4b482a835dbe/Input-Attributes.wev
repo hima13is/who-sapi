@@ -1,0 +1,23 @@
+%dw 2.0
+
+type auto_f385eb34_dfd6_464c_a331_4b482a835dbe_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {| environment: "uho-test-who-sapi.us-e2.cloudhub.io" | "uho-uat-who-sapi.us-e2.cloudhub.io" | "uho-dev-who-sapi.us-e2.cloudhub.io" | "uho-prod-who-sapi.us-e2.cloudhub.io" |}, 
+  version: String, 
+  localAddress: String
+|}
+

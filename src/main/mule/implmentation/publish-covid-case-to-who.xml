@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="41804b09-5385-49d6-b1bf-36a174710532" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://0.0.0.0:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="publish-covid-case-to-who" doc:id="b7e41ab5-ad04-4868-ae3c-d91689ec17cd" >
+		<set-variable value='#[attributes.headers."x-correlation-id" default ""]' doc:name="Set CorrelationId" doc:id="e02dedf0-2637-4bd3-9d29-11a56e9493e4" variableName="correlationId"/>
+		<logger level="INFO" doc:name="Start log" doc:id="baf4f85e-3127-43f3-be34-9c8f8504760b" message='transactionID: #[vars.transactionId]], correlationID: #[vars.correlationID], message: "Message ready for JMS queue": #[payload]'/>
+		<ee:transform doc:name="Transform Message" doc:id="5222ea31-829b-4c05-b010-b5bf916727ff" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+"CovidCase": {
+    "caseType":payload.caseType,
+    "FIRST_NAME":payload.firstName,
+    "LAST_NAME":payload.lastName,
+    "PHONE":payload.phone,
+    "EMAIL	":payload.email,
+    "DATE_OF_BIRTH":payload.dateOfBirth,
+    "COUNTRY":payload.country
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<jms:publish doc:name="Publish" doc:id="49189303-2afd-4029-af75-df26298c07ea" destination="Q.WHO.COVID.CASE.REPORT" sendCorrelationId="AUTO" config-ref="JMS_Config">
+			<jms:message correlationId="#[vars.correlationId]" />
+		</jms:publish>
+		<set-variable value="#[200]" doc:name="httpStatus" doc:id="b5431b77-5db3-4de0-a562-900f30c5df06" variableName="httpStatus" />
+		<ee:transform doc:name="Transform Message" doc:id="a6f33734-06a2-40ec-9a83-f46d5995fa3b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  		"code": vars.httpStatus,
+  		"message": "Success",
+  		"description": "Case reported successfully",
+  		"dateTime": now() as String {format:"yyyy-MM-dd"},
+  		"transactionId": vars.transactionId
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="8c9b5719-af72-4427-9bb3-117b04baa8b7" />
+		<error-handler ref="global-error-handler" />
+	</flow>
+</mule>

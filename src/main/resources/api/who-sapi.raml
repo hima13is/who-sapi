@@ -1,0 +1,50 @@
+#%RAML 1.0
+title: who-sapi
+version: v1
+baseUri: http://{environment}/covid/{version}/
+baseUriParameters:
+  environment:
+    description: DEV, TEST, UAT, PROD
+    enum: ["uho-dev-who-sapi.us-e2.cloudhub.io","uho-test-who-sapi.us-e2.cloudhub.io", "uho-uat-who-sapi.us-e2.cloudhub.io", "uho-prod-who-sapi.us-e2.cloudhub.io"]
+traits:
+  client-id-header: !include exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/client-id-required/1.0.0/client-id-required.raml
+  transaction-header: !include exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/trasaction-header/1.0.0/trasaction-header.raml
+  correlation-id-header: !include exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/correlation-header/1.0.0/correlation-header.raml
+uses:
+  resource-types: exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/resource-type/1.0.0/resource-type.raml
+  common-data-types: exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/common-data-type/1.0.0/common-data-type.raml
+  who-sapi-types: who-sapi-types/who-sapi-types.raml
+/case:
+  post:
+    description: To register covid case
+    is: [client-id-header,correlation-id-header,transaction-header]
+    body:
+      application/json:
+        type: who-sapi-types.report-covid-case-request-type
+        example: !include examples/report-covid-case-request.raml
+    responses:
+      200:
+        body:
+          application/json:
+            type: who-sapi-types.report-covid-case-response-type
+            example: !include examples/report-covid-case-response.raml
+      400:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/400/1.0.0/400.raml
+      503:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/503/1.0.0/503.raml
+      500:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include exchange_modules/9a75e2f3-f2bd-4a68-a230-e381427431ee/500/1.0.0/500.raml
+/health-check:
+  get:
+  type:
+    resource-types.all: 
+      getResponseType: string
